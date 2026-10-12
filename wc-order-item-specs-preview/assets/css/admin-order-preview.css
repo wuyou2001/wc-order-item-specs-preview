@@ -80,12 +80,17 @@ table.wp-list-table td.column-wc_order_item_specs {
     min-width: 230px;
     display: flex;
     flex-direction: column;
+    justify-content: center;
     gap: 4px;
 }
 
-/* 第 1 行：商品标题 */
-.wc-oisp-title-line {
-    line-height: 1.3;
+/* === 第 1 行：商品标题 + 规格徽章 === */
+.wc-oisp-line-1 {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    line-height: 1.35;
 }
 
 .wc-oisp-title {
@@ -93,10 +98,6 @@ table.wp-list-table td.column-wc_order_item_specs {
     font-weight: 600;
     color: #0f172a;
     text-decoration: none;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
     word-break: break-word;
 }
 
@@ -105,39 +106,37 @@ a.wc-oisp-title:hover {
     text-decoration: underline;
 }
 
-/* 第 2 行：规格属性行 */
-.wc-oisp-spec-row {
-    display: flex;
-    align-items: baseline;
-    gap: 5px;
-    font-size: 12px;
+.wc-oisp-specs-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: #f1f5f9;
+    color: #1e293b;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 11px;
+    font-weight: 500;
     line-height: 1.4;
+    white-space: nowrap !important;
 }
 
-.wc-oisp-label {
+.wc-oisp-specs-lbl {
     color: #64748b;
     font-weight: 400;
-    white-space: nowrap !important;
-    flex-shrink: 0;
 }
 
-.wc-oisp-specs-wrap {
-    color: #334155;
-    font-weight: 500;
-    word-break: break-word;
-}
-
-/* 第 3/4/5 行：键值网格行（商品ID、规格编号、单价、数量） */
-.wc-oisp-kv-row {
+/* === 第 2 行：ID、规格编号、SKU、单价与数量高亮 === */
+.wc-oisp-line-2 {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1.4;
 }
 
-.wc-oisp-kv-left {
+.wc-oisp-line-2-left {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
@@ -145,25 +144,33 @@ a.wc-oisp-title:hover {
     white-space: nowrap;
 }
 
-.wc-oisp-kv-right {
+.wc-oisp-line-2-right {
     flex-shrink: 0;
     margin-left: auto;
 }
 
-/* 可点击复制徽章 */
-.wc-oisp-copyable {
+/* 元信息小胶囊 */
+.wc-oisp-meta-chip {
     display: inline-flex;
     align-items: center;
     gap: 3px;
-    background: #f1f5f9;
+    background: #f8fafc;
     color: #334155;
     border: 1px solid #e2e8f0;
     border-radius: 3px;
     padding: 0 5px;
     font-size: 11px;
+    white-space: nowrap !important;
+}
+
+.wc-oisp-chip-lbl {
+    color: #64748b;
+}
+
+/* 可点击复制徽章 */
+.wc-oisp-copyable {
     cursor: pointer;
     user-select: none;
-    white-space: nowrap !important;
     transition: background 0.15s ease, border-color 0.15s ease;
 }
 
@@ -173,11 +180,18 @@ a.wc-oisp-title:hover {
     color: #1e40af;
 }
 
-.wc-oisp-sku-val {
-    font-weight: 600;
+.wc-oisp-sku-chip {
+    font-weight: 500;
     color: #1e40af;
     background: #eff6ff;
     border-color: #bfdbfe;
+}
+
+.wc-oisp-price-chip {
+    color: #475569;
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    font-weight: 500;
 }
 
 .wc-oisp-copy-btn-icon {
@@ -190,25 +204,11 @@ a.wc-oisp-title:hover {
     color: #2563eb;
 }
 
-.wc-oisp-divider {
-    color: #cbd5e1;
-    font-size: 11px;
-    margin: 0 2px;
-}
-
 /* 购买数量高亮（* 1 红色粗体） */
 .wc-oisp-qty-bold {
     color: #ef4444;
     font-weight: 700;
     font-size: 14px;
-    white-space: nowrap !important;
-}
-
-/* 商品单价文本 */
-.wc-oisp-price-text {
-    color: #475569;
-    font-weight: 500;
-    font-size: 12px;
     white-space: nowrap !important;
 }
 

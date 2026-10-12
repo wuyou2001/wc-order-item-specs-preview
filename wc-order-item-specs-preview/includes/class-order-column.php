@@ -250,83 +250,66 @@ class WC_OISP_Order_Column
         // 2. 右侧信息主体
         echo '<div class="wc-oisp-item-meta">';
 
-        // 第 1 行：商品标题
-        echo '<div class="wc-oisp-title-line">';
+        // === 第 1 行：商品标题 + 规格属性标签 ===
+        echo '<div class="wc-oisp-line wc-oisp-line-1">';
         $edit_url = $product_id ? admin_url('post.php?post=' . $product_id . '&action=edit') : '';
         if ($edit_url && current_user_can('edit_products')) {
             echo '<a href="' . esc_url($edit_url) . '" class="wc-oisp-title" target="_blank" title="' . esc_attr($item->get_name()) . '">' . esc_html($item->get_name()) . '</a>';
         } else {
             echo '<span class="wc-oisp-title" title="' . esc_attr($item->get_name()) . '">' . esc_html($item->get_name()) . '</span>';
         }
-        echo '</div>';
 
-        // 第 2 行：规格属性 (Specs)
         if (!empty($specs)) {
-            echo '<div class="wc-oisp-spec-row">';
-            echo '<span class="wc-oisp-label">' . esc_html__('规格:', 'wc-order-item-specs-preview') . '</span> ';
-            echo '<span class="wc-oisp-specs-wrap">';
+            echo '<span class="wc-oisp-specs-badge">';
+            echo '<span class="wc-oisp-specs-lbl">' . esc_html__('规格:', 'wc-order-item-specs-preview') . '</span> ';
             $spec_parts = [];
             foreach ($specs as $spec_name => $spec_val) {
-                $spec_parts[] = esc_html($spec_name) . ' [' . esc_html($spec_val) . ']';
+                $spec_parts[] = esc_html($spec_name) . ': ' . esc_html($spec_val);
             }
-            echo esc_html(implode(', ', $spec_parts));
+            echo esc_html(implode(' | ', $spec_parts));
             echo '</span>';
-            echo '</div>';
         }
+        echo '</div>'; // .wc-oisp-line-1
 
-        // 第 3 行：商品ID 与 购买数量高亮 (* 1)
-        echo '<div class="wc-oisp-kv-row">';
-        echo '<div class="wc-oisp-kv-left">';
+        // === 第 2 行：ID、规格编号、SKU、单价与数量高亮 ===
+        echo '<div class="wc-oisp-line wc-oisp-line-2">';
+        echo '<div class="wc-oisp-line-2-left">';
+
         if ($settings['show_sku_and_id'] === 'yes') {
             if ($product_id) {
-                echo '<span class="wc-oisp-label">' . esc_html__('商品ID:', 'wc-order-item-specs-preview') . '</span> ';
-                echo '<span class="wc-oisp-val wc-oisp-copyable" data-copy="' . esc_attr($product_id) . '" title="' . esc_attr__('点击复制商品ID', 'wc-order-item-specs-preview') . '">';
-                echo esc_html($product_id);
+                echo '<span class="wc-oisp-meta-chip wc-oisp-copyable" data-copy="' . esc_attr($product_id) . '" title="' . esc_attr__('点击复制商品ID', 'wc-order-item-specs-preview') . '">';
+                echo '<span class="wc-oisp-chip-lbl">' . esc_html__('ID:', 'wc-order-item-specs-preview') . '</span>' . esc_html($product_id);
                 echo ' <span class="wc-oisp-copy-btn-icon" aria-hidden="true">❐</span>';
                 echo '</span>';
             }
-        }
-        echo '</div>';
-        echo '<div class="wc-oisp-kv-right">';
-        echo '<span class="wc-oisp-qty-bold" title="' . esc_attr__('购买数量', 'wc-order-item-specs-preview') . '">* ' . esc_html($quantity) . '</span>';
-        echo '</div>';
-        echo '</div>'; // .wc-oisp-kv-row
-
-        // 第 4 行：规格编号 / SKU 货号
-        if ($settings['show_sku_and_id'] === 'yes' && ($variation_id || !empty($sku))) {
-            echo '<div class="wc-oisp-kv-row">';
-            echo '<div class="wc-oisp-kv-left">';
             if ($variation_id) {
-                echo '<span class="wc-oisp-label">' . esc_html__('规格编号:', 'wc-order-item-specs-preview') . '</span> ';
-                echo '<span class="wc-oisp-val wc-oisp-copyable" data-copy="' . esc_attr($variation_id) . '" title="' . esc_attr__('点击复制规格编号', 'wc-order-item-specs-preview') . '">';
-                echo esc_html($variation_id);
+                echo '<span class="wc-oisp-meta-chip wc-oisp-copyable" data-copy="' . esc_attr($variation_id) . '" title="' . esc_attr__('点击复制规格编号', 'wc-order-item-specs-preview') . '">';
+                echo '<span class="wc-oisp-chip-lbl">' . esc_html__('规格号:', 'wc-order-item-specs-preview') . '</span>' . esc_html($variation_id);
                 echo ' <span class="wc-oisp-copy-btn-icon" aria-hidden="true">❐</span>';
                 echo '</span>';
             }
             if (!empty($sku)) {
-                if ($variation_id) {
-                    echo ' <span class="wc-oisp-divider">|</span> ';
-                }
-                echo '<span class="wc-oisp-label">SKU:</span> ';
-                echo '<span class="wc-oisp-val wc-oisp-sku-val wc-oisp-copyable" data-copy="' . esc_attr($sku) . '" title="' . esc_attr__('点击复制SKU', 'wc-order-item-specs-preview') . '">';
-                echo esc_html($sku);
+                echo '<span class="wc-oisp-meta-chip wc-oisp-sku-chip wc-oisp-copyable" data-copy="' . esc_attr($sku) . '" title="' . esc_attr__('点击复制SKU', 'wc-order-item-specs-preview') . '">';
+                echo '<span class="wc-oisp-chip-lbl">SKU:</span>' . esc_html($sku);
                 echo ' <span class="wc-oisp-copy-btn-icon" aria-hidden="true">❐</span>';
                 echo '</span>';
             }
-            echo '</div>';
-            echo '</div>';
         }
 
-        // 第 5 行：商品单价
         if ($settings['show_item_price'] === 'yes') {
-            echo '<div class="wc-oisp-kv-row">';
-            echo '<div class="wc-oisp-kv-left">';
-            echo '<span class="wc-oisp-label">' . esc_html__('商品单价:', 'wc-order-item-specs-preview') . '</span> ';
-            echo '<span class="wc-oisp-val wc-oisp-price-text">' . wc_price($item_total, ['currency' => $currency]) . '</span>';
-            echo '</div>';
-            echo '</div>';
+            echo '<span class="wc-oisp-meta-chip wc-oisp-price-chip">';
+            echo '<span class="wc-oisp-chip-lbl">' . esc_html__('单价:', 'wc-order-item-specs-preview') . '</span>' . wc_price($item_total, ['currency' => $currency]);
+            echo '</span>';
         }
 
+        echo '</div>'; // .wc-oisp-line-2-left
+
+        // 数量高亮 * 1
+        echo '<div class="wc-oisp-line-2-right">';
+        echo '<span class="wc-oisp-qty-bold" title="' . esc_attr__('购买数量', 'wc-order-item-specs-preview') . '">* ' . esc_html($quantity) . '</span>';
+        echo '</div>';
+
+        echo '</div>'; // .wc-oisp-line-2
         echo '</div>'; // .wc-oisp-item-meta
         echo '</div>'; // .wc-oisp-item-row
     }

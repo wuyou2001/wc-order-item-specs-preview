@@ -3,7 +3,7 @@
 /**
  * Plugin Name: WooCommerce 订单商品规格与发货明细预览
  * Description: 在 WooCommerce 订单列表直观展示每个订单的商品缩略图、规格属性、数量、SKU货号及可折叠的一键复制发货地址与买家留言高亮警示，完美兼容 HPOS 与传统订单模式，支持 GitHub 自动静默更新。
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Wwnine
  * Requires at least: 5.6
  * Requires PHP: 7.4
