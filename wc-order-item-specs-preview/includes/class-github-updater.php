@@ -49,10 +49,18 @@ if (!class_exists('WP_GitHub_Plugin_Updater')) {
             $this->github_repo     = trim($github_repo);
             $this->zip_filename    = !empty($zip_filename) ? $zip_filename : ($this->slug . '.zip');
 
+            // 挂钩 WordPress 核心更新检查（保存瞬态与读取瞬态双向挂钩）
             add_filter('pre_set_site_transient_update_plugins', [$this, 'check_update']);
+            add_filter('site_transient_update_plugins', [$this, 'check_update']);
+
+            // 接管详情弹窗与安装目录校正
             add_filter('plugins_api', [$this, 'plugin_popup'], 20, 3);
             add_filter('upgrader_source_selection', [$this, 'source_selection'], 10, 4);
             add_filter('upgrader_post_install', [$this, 'post_install'], 10, 3);
+
+            // 插件列表快捷操作：一键立即检查更新
+            add_filter('plugin_action_links_' . $this->plugin_basename, [$this, 'add_check_link']);
+            add_action('admin_init', [$this, 'handle_check_action']);
         }
 
         /**
@@ -63,8 +71,17 @@ if (!class_exists('WP_GitHub_Plugin_Updater')) {
          */
         public function get_release_info($force_check = false)
         {
-            $transient_key = 'wpgh_update_' . md5($this->github_repo . '_' . $this->slug);
+            global $pagenow;
             if (!$force_check) {
+                if ($pagenow === 'update-core.php' || !empty($_GET['force-check']) || !empty($_GET['wpgh_action'])) {
+                    $force_check = true;
+                }
+            }
+
+            $transient_key = 'wpgh_update_' . md5($this->github_repo . '_' . $this->slug);
+            if ($force_check) {
+                delete_transient($transient_key);
+            } else {
                 $cached = get_transient($transient_key);
                 if (is_array($cached)) {
                     return $cached;
@@ -86,7 +103,7 @@ if (!class_exists('WP_GitHub_Plugin_Updater')) {
             if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
                 $data = json_decode(wp_remote_retrieve_body($response), true);
                 if (is_array($data) && !empty($data['tag_name'])) {
-                    set_transient($transient_key, $data, 12 * HOUR_IN_SECONDS);
+                    set_transient($transient_key, $data, 1 * HOUR_IN_SECONDS);
                     return $data;
                 }
             }
@@ -118,7 +135,7 @@ if (!class_exists('WP_GitHub_Plugin_Updater')) {
                         ],
                         'published_at' => gmdate('Y-m-d H:i:s'),
                     ];
-                    set_transient($transient_key, $data, 12 * HOUR_IN_SECONDS);
+                    set_transient($transient_key, $data, 1 * HOUR_IN_SECONDS);
                     return $data;
                 }
             }
@@ -131,8 +148,11 @@ if (!class_exists('WP_GitHub_Plugin_Updater')) {
          */
         public function check_update($transient)
         {
-            if (empty($transient->checked)) {
-                return $transient;
+            if (!is_object($transient)) {
+                $transient = new stdClass();
+            }
+            if (!isset($transient->response)) {
+                $transient->response = [];
             }
 
             $release = $this->get_release_info();
@@ -171,9 +191,55 @@ if (!class_exists('WP_GitHub_Plugin_Updater')) {
                 ];
 
                 $transient->response[$this->plugin_basename] = $item;
+                if (isset($transient->no_update[$this->plugin_basename])) {
+                    unset($transient->no_update[$this->plugin_basename]);
+                }
             }
 
             return $transient;
+        }
+
+        /**
+         * 在插件操作链接追加「检查更新」。
+         */
+        public function add_check_link($links)
+        {
+            $url = wp_nonce_url(
+                admin_url('plugins.php?wpgh_action=check&plugin=' . urlencode($this->plugin_basename)),
+                'wpgh_check_' . $this->plugin_basename
+            );
+            $links['wpgh_check'] = '<a href="' . esc_url($url) . '" style="color: #2271b1;">' . esc_html__('检查更新', 'default') . '</a>';
+            return $links;
+        }
+
+        /**
+         * 处理手动点击「检查更新」请求。
+         */
+        public function handle_check_action()
+        {
+            if (!current_user_can('update_plugins')) {
+                return;
+            }
+
+            if (isset($_GET['wpgh_action']) && $_GET['wpgh_action'] === 'check' && isset($_GET['plugin']) && $_GET['plugin'] === $this->plugin_basename) {
+                check_admin_referer('wpgh_check_' . $this->plugin_basename);
+
+                $transient_key = 'wpgh_update_' . md5($this->github_repo . '_' . $this->slug);
+                delete_transient($transient_key);
+                delete_site_transient('update_plugins');
+                $this->get_release_info(true);
+
+                wp_safe_redirect(admin_url('plugins.php?wpgh_checked=1&plugin=' . urlencode($this->slug)));
+                exit;
+            }
+
+            if (isset($_GET['wpgh_checked']) && isset($_GET['plugin']) && $_GET['plugin'] === $this->slug) {
+                add_action('admin_notices', function () {
+                    echo '<div class="notice notice-success is-dismissible"><p>' .
+                        esc_html__('已成功检查 GitHub 远程最新版本！如有更新，下方已显示升级提示。', 'default') .
+                        '</p></div>';
+                });
+            }
         }
 
         /**
